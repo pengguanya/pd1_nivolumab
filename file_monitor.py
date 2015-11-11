@@ -1,4 +1,4 @@
-# python script to monitor file changes
+# python script to monitor file changes and backup files
 
 import os
 import win32file
@@ -7,6 +7,7 @@ import win32api
 import time
 import collections
 import glob
+import shutil
 
 class savedfiles:
     '''Class to handle file modification time storage and processing'''
@@ -51,24 +52,33 @@ class savedfiles:
         queue = collections.deque(filelist, maxlen = maxnum)
         return queue
 
-path_to_watch = r"C:\Users\username\AppData\Local\Google\Chrome\User Data\Default" # directory to monitor
-file_to_watch = 'Bookmarks' # the file to monitor
-path_to_move= r"D:\Google Drive\backup\bookmarks" # the directory to copy the changed file
-full_file_path = os.path.join(path_to_watch, file_to_watch)
 
-# use a deque data struture to store modification time footprint
-numfile_to_keep = 5
-backupfiles = savedfiles(path_to_move)
-filequeue = backupfiles.queue_file(numfile_to_keep)
-print(filequeue)
-#path_to_watch = filename
-#os.path.abspath(filename)
-#path_to_storechange = destfile
-#os.path.abspath(destfile)
+def timetoname(path, filename, intime, isdst=False):
+    '''function to convert path, filename and input time to new file name
+    the variable intime can not be named as 'time', because time is here a class with gmtime method
+    Isdst need to be explicitly defined, because time.localtime() always return is_dst=0 on this Windows machine.'''
+    if not isdst:
+        timedelay = 3600
+    else:
+        timedelay = 0
+    timestr = time.strftime("%Y%m%d_%H%M%S", time.gmtime(intime+timedelay))
+    newfilename = '_'.join((filename, timestr))
+    newfilepath = os.path.join(path, newfilename)
+    return newfilepath
 
+def main():
+    path_to_watch = r"C:\Users\PGY\AppData\Local\Google\Chrome\User Data\Default" # directory to monitor
+    file_to_watch = 'Bookmarks' # the file to monitor
+    path_to_move= r"D:\Google Drive\backup\bookmarks" # the directory to copy the changed file
+    full_file_path = os.path.join(path_to_watch, file_to_watch)
 
-FILE_LIST_DIRECTORY = 0x0001
-hDir = win32file.CreateFile(
+    # use a deque data struture to store modification time footprint
+    numfile_to_keep = 5
+    backupfiles = savedfiles(path_to_move)
+    filequeue = backupfiles.queue_file(numfile_to_keep)
+
+    FILE_LIST_DIRECTORY = 0x0001
+    hDir = win32file.CreateFile(
         path_to_watch,
         FILE_LIST_DIRECTORY,
         win32con.FILE_SHARE_READ | win32con.FILE_SHARE_WRITE | win32con.FILE_SHARE_DELETE,
@@ -78,44 +88,55 @@ hDir = win32file.CreateFile(
         None
         )
 
-def timetoname(path, filename, intime):
-    '''function to convert path, filename and input time to new file name
-    the variable intime can not be named as 'time', because time is here a class with gmtime method'''
-    timestr = time.strftime("%Y%m%d_%H%M%S", time.gmtime(intime))
-    newfilename = '_'.join((filename, timestr))
-    newfilepath = os.path.join(path, newfilename)
-    return newfilepath
+    # infinitive loop to start monitor
+    while True:
+        results = win32file.ReadDirectoryChangesW (
+                hDir,
+                1024,
+                False,
+                win32con.FILE_NOTIFY_CHANGE_SIZE |
+                win32con.FILE_NOTIFY_CHANGE_LAST_WRITE,
+                None,
+                None
+                )
 
-while True:
-    results = win32file.ReadDirectoryChangesW (
-            hDir,
-            1024,
-            False,
-            win32con.FILE_NOTIFY_CHANGE_SIZE |
-            win32con.FILE_NOTIFY_CHANGE_LAST_WRITE,
-            None,
-            None
-            )
-    changed_file = results[0][1]
-    if file_to_watch in changed_file:
-        # add time delay to wait until the tmp file become real file
-        time.sleep(0.1)
+        changed_file = results[0][1]
 
-        # get modify time stamp and use it in saved filename
-        try:
-            mtime = os.path.getmtime(full_file_path)
-        except OSError:
-            mtime = 0
+        if file_to_watch in changed_file:
+            # add time delay to wait until the tmp file become real file
+            time.sleep(0.1)
 
-        if len(filequeue) >= 5:
-            filetoremove = filequeue.popleft()
-            os.remove(filetoremove)
+            # get modify time stamp and use it in saved filename
+            try:
+                mtime = os.path.getmtime(full_file_path)
+            except OSError:
+                mtime = 0
 
-        # backup newfiles generated only longer than 1 second after the old file
-        mtime_lastfile = os.path.getmtime(filequeue[-1])
-        if mtime - mtime_lastfile > 1:
-            full_copy_path = timetoname(path_to_move, file_to_watch, mtime)
-            # copy the file
-            win32api.CopyFile(full_file_path, full_copy_path)
-            # append the new modification time to the right side of the deque
-            filequeue.append(full_copy_path)
+            if len(filequeue) >= numfile_to_keep:
+                filetoremove = filequeue.popleft()
+                # try to remove the oldest file in the queue
+                # this can be extanded to a log file generator in the future
+                try:
+                    os.remove(filetoremove)
+                # if file not find, regenerate the filequeue with the updated files
+                except FileNotFoundError:
+                    newbackupfiles = savedfiles(path_to_move)
+                    filequeue = newbackupfiles.queue_file(numfile_to_keep)
+                # try to remove a dir will generate PermsssionError
+                # use shutil to remove the dir
+                # if it is other reason, ignore it
+                except PermissionError:
+                    shutil.rmtree(filetoremove, ignore_errors=True)
+
+            # backup newfiles generated only longer than 1 second after the old file
+            mtime_lastfile = os.path.getmtime(filequeue[-1])
+            if mtime - mtime_lastfile > 1:
+                full_copy_path = timetoname(path_to_move, file_to_watch, mtime)
+                # copy the file
+                win32api.CopyFile(full_file_path, full_copy_path)
+                # append the new modification time to the right side of the deque
+                filequeue.append(full_copy_path)
+
+if __name__ == "__main__":
+    # execute only if run as a script
+    main()
