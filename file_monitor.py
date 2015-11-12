@@ -67,7 +67,7 @@ def timetoname(path, filename, intime, isdst=False):
     return newfilepath
 
 def main():
-    path_to_watch = r"C:\Users\PGY\AppData\Local\Google\Chrome\User Data\Default" # directory to monitor
+    path_to_watch = r"C:\Users\username\AppData\Local\Google\Chrome\User Data\Default" # directory to monitor
     file_to_watch = 'Bookmarks' # the file to monitor
     path_to_move= r"D:\Google Drive\backup\bookmarks" # the directory to copy the changed file
     full_file_path = os.path.join(path_to_watch, file_to_watch)
@@ -133,7 +133,16 @@ def main():
             if mtime - mtime_lastfile > 1:
                 full_copy_path = timetoname(path_to_move, file_to_watch, mtime)
                 # copy the file
-                win32api.CopyFile(full_file_path, full_copy_path)
+                # win32api.CopyFile(full_file_path, full_copy_path)
+                # use shutil instead of win32api for portable reason
+                # in Unix shutil.copy2 will copy metadata
+                # shutil.copy2 will replace the existed file
+                # to avoid overwrite existed file, use shutil.copyfile
+                # but then the metadata can not be copied
+                try:
+                    shutil.copy2(full_file_path, full_copy_path)
+                except IOError:
+                    pass
                 # append the new modification time to the right side of the deque
                 filequeue.append(full_copy_path)
 
