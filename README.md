@@ -11,14 +11,17 @@ pd1_nivolumab/
 ├── main.py
 ├── evaluation.py
 ├── data/
+│   ├── __init__.py
 │   └── download.py
 ├── datasets/
+│   ├── __init__.py
 │   └── protein_dataset.py
 ├── models/
 │   ├── __init__.py
 │   ├── positional_encoding.py
 │   └── transformer_model.py
 └── utils/
+│   ├── __init__.py
     ├── tokenization.py
     └── evaluate.py
 ```
