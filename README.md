@@ -83,9 +83,9 @@ The project employs a Transformer-based model for protein sequence modeling. Bel
     - Ensure the model cannot simply learn to ignore the masked positions.
   
 - **Outcome:**  
-This project demonstrates a functional Transformer-based model trained on PD-1 protein sequences, achieving low loss and high token-level accuracy. While this performance reflects overfitting due to the use of a single sequence, it validates the model’s ability to learn structured biological patterns.
+  This project demonstrates a functional Transformer-based model trained on PD-1 protein sequences, achieving low loss and high token-level accuracy. While this performance reflects overfitting due to the use of a single sequence, it validates the model’s ability to learn structured biological patterns.
 
-The current setup serves as a strong foundation for real-world applications in protein modeling and biologic drug discovery. The implemented architecture and training pipeline are directly extensible to more complex tasks such as antibody design, epitope prediction, and affinity modeling.
+  The current setup serves as a strong foundation for real-world applications in protein modeling and biologic drug discovery. The implemented architecture and training pipeline are directly extensible to more complex tasks such as antibody design, epitope prediction, and affinity modeling.
 
 ## Project Details
 
