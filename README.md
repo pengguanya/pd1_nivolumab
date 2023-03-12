@@ -77,11 +77,7 @@ The project employs a Transformer-based model for protein sequence modeling. Bel
   - **Self-Supervised Learning:** The model is trained using a self-supervised objective where the input sequence is used as the target. This means the model learns to reconstruct its input without the need for labeled data.
   - **Random Masked Language Modeling:**  
     In the dataset class, a fraction of tokens is randomly masked (i.e., replaced with a special token, here using `0` as the mask) during training. This encourages the model to learn contextual representations by predicting the masked tokens.  
-    **Note:** In the current setup, while masking is applied to the input data, the training loop still uses the full target sequence (i.e., the original sequence without masking) as the prediction target. This makes the task easier and leads to near-perfect reconstruction because the model is simply learning to copy the input. For a more realistic masked language modeling (MLM) task, you would typically:
-    - Compute loss only on the masked positions.
-    - Use a distinct mask token that is not used for padding.
-    - Ensure the model cannot simply learn to ignore the masked positions.
-  
+
 - **Outcome:**  
   This project demonstrates a functional Transformer-based model trained on PD-1 protein sequences, achieving low loss and high token-level accuracy. While this performance reflects overfitting due to the use of a single sequence, it validates the model’s ability to learn structured biological patterns.
 
