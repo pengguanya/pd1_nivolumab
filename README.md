@@ -105,9 +105,6 @@ The project employs a Transformer-based model for protein sequence modeling. Bel
 - **Dataset Diversity:**  
   Use a larger and more diverse dataset instead of a single replicated sequence to help the model generalize better.
 
-- **Masked Language Modeling:**  
-  Introduce masking during training (e.g., replacing a fraction of input tokens with a mask token) so that the model learns to predict missing tokens rather than simply copying the input.
-
 - **Fine-Tuning:**  
   Fine-tune the model on antibody-specific or PD-1-related datasets to improve its biological relevance.
 
