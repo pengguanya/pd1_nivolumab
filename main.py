@@ -87,6 +87,19 @@ for epoch in range(1, num_epochs + 1):
     avg_loss = total_loss / len(dataloader)
     print(f"Epoch {epoch}/{num_epochs}, Loss: {avg_loss:.4f}")
 
+
+# --------------------------
+# Save the Trained Model
+# --------------------------
+
+output_dir = "output"
+os.makedirs(output_dir, exist_ok=True)
+
+model_save_path = os.path.join(output_dir, "trained_model.pth")
+torch.save(model.state_dict(), model_save_path)
+print(f"Model saved to {model_save_path}")
+
+
 # --------------------------
 # Sequence Generation Example
 # --------------------------
