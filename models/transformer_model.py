@@ -8,8 +8,12 @@ class ProteinTransformer(nn.Module):
                  dim_feedforward: int = 256, dropout: float = 0.1):
         super().__init__()
         self.embedding = nn.Embedding(vocab_size, emb_size, padding_idx=0)
-        self.pos_encoder = PositionalEncoding(emb_size, dropout)
-        encoder_layer = nn.TransformerEncoderLayer(emb_size, nhead, dim_feedforward, dropout)
+
+        # Set batch_first=True for the positional encoder as well.
+        self.pos_encoder = PositionalEncoding(emb_size, dropout, batch_first=True)
+
+        # Specify batch_first=True in TransformerEncoderLayer.
+        encoder_layer = nn.TransformerEncoderLayer(emb_size, nhead, dim_feedforward, dropout, batch_first=True)
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers)
         self.decoder = nn.Linear(emb_size, vocab_size)
         self.emb_size = emb_size
@@ -22,11 +26,8 @@ class ProteinTransformer(nn.Module):
         Returns:
             Logits tensor of shape (batch_size, seq_len, vocab_size)
         """
-        # Transpose for transformer: (seq_len, batch_size)
-        src = src.transpose(0, 1)
-        src = self.embedding(src) * math.sqrt(self.emb_size)
-        src = self.pos_encoder(src)
+        src = self.embedding(src) * math.sqrt(self.emb_size)  # (batch_size, seq_len, emb_size)
+        src = self.pos_encoder(src)  # pos_encoder now supports batch-first inputs
         output = self.transformer_encoder(src, src_mask)
         output = self.decoder(output)
-        return output.transpose(0, 1)
-
+        return output  # shape (batch_size, seq_len, vocab_size)
