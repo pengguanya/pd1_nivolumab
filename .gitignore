@@ -3,3 +3,9 @@ venv/
 .env/
 env/
 .venv/
+
+# Ignore data
+**/*.fasta
+
+# Ignore Jupyter Notebook checkpoints
+**/__pycache__/
