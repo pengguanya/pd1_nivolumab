@@ -9,3 +9,5 @@ env/
 
 # Ignore Jupyter Notebook checkpoints
 **/__pycache__/
+
+output/
